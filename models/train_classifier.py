@@ -72,13 +72,20 @@ def tokenize(text):
     return tokens
 
 def build_model():
-    fbeta2_scorer = make_scorer(fbeta_score, greater_is_better=True, beta=2)
     pipeline = Pipeline([
         ('vect', CountVectorizer(tokenizer = tokenize)),
         ('tfidf', TfidfTransformer()),
         ('clf', MultiOutputClassifier(estimator=RandomForestClassifier()))
     ])
-    return pipeline
+    parameters = {
+        'vect__max_df': (0.5, 1.0),
+        'tfidf__use_idf': (True, False),
+        'clf__estimator__n_estimators': [10, 30],
+        'clf__estimator__min_samples_split': [2, 5, 10]
+    }
+
+    cv = GridSearchCV(pipeline, param_grid=parameters, cv=3, verbose=2, n_jobs=-1)
+    return cv
 
 def calculate_scores(actuals, predicted, labels):
     scores = []
@@ -115,7 +122,8 @@ def main():
         model = build_model()
         
         print('Training model...')
-        model.fit(X_train, Y_train)
+        with active_session():
+            model.fit(X_train, Y_train)
         
         print('Evaluating model...')
         evaluate_model(model, X_test, Y_test, category_names)
