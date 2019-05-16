@@ -45,6 +45,7 @@ def index():
     
     category_data = df.drop(['id', 'message', 'original'], axis=1).groupby('genre').sum().T
     
+    category_data_sum = category_data.sum(axis=1)
     # create visuals
     # TODO: Below is an example - modify to create your own visuals
     graphs = [
@@ -59,6 +60,24 @@ def index():
 
             'layout': {
                 'title': 'Message Categories by Genre',
+                'yaxis': {
+                    'title': "Count"
+                },
+                'xaxis': {
+                    'title': "Categories"
+                }
+            }
+        },
+        {
+            'data': [
+                Bar(
+                    x=category_data_sum.index,
+                    y=category_data_sum.values
+                )
+            ],
+
+            'layout': {
+                'title': 'Message Categories %',
                 'yaxis': {
                     'title': "Count"
                 },
